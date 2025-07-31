@@ -40,7 +40,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
   const categories = ["Antibiotics", "Pain Relief", "Vitamins", "First Aid", "Equipment"]
   const units = ["pieces", "bottles", "boxes", "vials", "tablets", "ml", "mg", "g"]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault()
     onAddItem({
       ...formData,
