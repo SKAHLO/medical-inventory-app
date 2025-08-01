@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Search, AlertTriangle, Package, Users, DollarSign } from "lucide-react"
+import { Plus, Search, AlertTriangle, Package, Users, DollarSign, LogOut, UserCog } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,8 +12,12 @@ import { InventoryList } from "@/components/inventory-list"
 import { AddItemDialog } from "@/components/add-item-dialog"
 import { StockTransactionDialog } from "@/components/stock-transaction-dialog"
 import { SuppliersTab } from "@/components/suppliers-tab"
+import { LoginForm } from "@/components/login-form"
+import { UserManagement } from "@/components/user-management"
 
 export default function InventoryDashboard() {
+  const [user, setUser] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState<boolean>(true)
   const [items, setItems] = useState<any[]>([])
   const [suppliers, setSuppliers] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
@@ -25,6 +29,26 @@ export default function InventoryDashboard() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+
     const fetchAllData = async () => {
       try {
         setIsLoading(true)
@@ -65,7 +89,7 @@ export default function InventoryDashboard() {
     }
 
     fetchAllData()
-  }, [])
+  }, [user])
 
   // Calculate dashboard metrics
   const totalItems = items.length
@@ -188,6 +212,34 @@ export default function InventoryDashboard() {
     setIsStockTransactionOpen(true)
   }
 
+  const handleLogin = (userData: any) => {
+    setUser(userData)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      setUser(null)
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="text-center py-12 text-slate-500">
+          <Package className="h-12 w-12 animate-spin mx-auto mb-4" />
+          Loading...
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginForm onLogin={handleLogin} />
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
@@ -221,13 +273,25 @@ export default function InventoryDashboard() {
             </h1>
             <p className="text-slate-600 mt-2 text-lg">Manage your medical supplies with precision and care</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <span className="text-sm text-slate-600">
+              Welcome, <span className="font-semibold">{user.name}</span>
+              {user.level === 'admin' && <span className="ml-1 text-purple-600">(Admin)</span>}
+            </span>
             <Button
               onClick={() => setIsAddItemOpen(true)}
               className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Item
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="border-slate-300 hover:bg-slate-50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
             </Button>
           </div>
         </div>
@@ -299,7 +363,7 @@ export default function InventoryDashboard() {
 
         {/* Elegant Main Content Tabs */}
         <Tabs defaultValue="inventory" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white shadow-lg border border-slate-200">
+          <TabsList className={`grid w-full ${user.level === 'admin' ? 'grid-cols-4' : 'grid-cols-3'} bg-white shadow-lg border border-slate-200`}>
             <TabsTrigger
               value="inventory"
               className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:border-emerald-200 font-medium"
@@ -318,6 +382,15 @@ export default function InventoryDashboard() {
             >
               Transactions
             </TabsTrigger>
+            {user.level === 'admin' && (
+              <TabsTrigger
+                value="users"
+                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 font-medium"
+              >
+                <UserCog className="w-4 h-4 mr-2" />
+                Users
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="inventory" className="space-y-6">
@@ -341,7 +414,7 @@ export default function InventoryDashboard() {
           </TabsContent>
 
           <TabsContent value="suppliers">
-            <SuppliersTab suppliers={suppliers} onAddSupplier={handleAddSupplier}/>
+            <SuppliersTab suppliers={suppliers} onAddSupplier={handleAddSupplier} />
           </TabsContent>
 
           <TabsContent value="transactions">
@@ -394,6 +467,12 @@ export default function InventoryDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {user.level === 'admin' && (
+            <TabsContent value="users">
+              <UserManagement />
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Dialogs */}

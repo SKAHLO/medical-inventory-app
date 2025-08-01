@@ -28,23 +28,23 @@ export function InventoryList({ items, onStockAction }: InventoryListProps) {
     }
   })
 
-  const getStockStatus = (item: { quantity: number; minStock: number }) => {
-    if (item.quantity === 0)
+  const getStockStatus = (item) => {
+    if (parseInt(item.quantity) === 0)
       return { status: "out", color: "bg-red-100 text-red-800 border-red-200", label: "Out of Stock" }
-    if (item.quantity <= item.minStock)
+    if (parseInt(item.quantity) <= parseInt(item.min_stock))
       return { status: "low", color: "bg-amber-100 text-amber-800 border-amber-200", label: "Low Stock" }
     return { status: "good", color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "In Stock" }
   }
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = (category) => {
     const colors = {
-      "Antibiotics": "bg-purple-100 text-purple-800 border-purple-200",
+      Antibiotics: "bg-purple-100 text-purple-800 border-purple-200",
       "Pain Relief": "bg-rose-100 text-rose-800 border-rose-200",
-      "Vitamins": "bg-orange-100 text-orange-800 border-orange-200",
+      Vitamins: "bg-orange-100 text-orange-800 border-orange-200",
       "First Aid": "bg-teal-100 text-teal-800 border-teal-200",
-      "Equipment": "bg-slate-100 text-slate-800 border-slate-200",
+      Equipment: "bg-slate-100 text-slate-800 border-slate-200",
     }
-    return  colors[category] || "bg-slate-100 text-slate-800 border-slate-200"
+    return colors[category] || "bg-slate-100 text-slate-800 border-slate-200"
   }
 
   return (
