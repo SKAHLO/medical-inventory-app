@@ -122,4 +122,4 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (name, password, level) VALUES 
-('admin', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+('admin', '$2b$10$wBs0CWo5GvMyuGCPaDDZ2.p5B5hzpYgFLseCe5WPQetoONSN26t3i', 'admin');
