@@ -28,7 +28,7 @@ export function InventoryList({ items, onStockAction }: InventoryListProps) {
     }
   })
 
-  const getStockStatus = (item) => {
+  const getStockStatus = (item: { quantity: number; minStock: number }) => {
     if (item.quantity === 0)
       return { status: "out", color: "bg-red-100 text-red-800 border-red-200", label: "Out of Stock" }
     if (item.quantity <= item.minStock)
@@ -36,15 +36,15 @@ export function InventoryList({ items, onStockAction }: InventoryListProps) {
     return { status: "good", color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "In Stock" }
   }
 
-  const getCategoryColor = (category) => {
+  const getCategoryColor = (category: string) => {
     const colors = {
-      Antibiotics: "bg-purple-100 text-purple-800 border-purple-200",
+      "Antibiotics": "bg-purple-100 text-purple-800 border-purple-200",
       "Pain Relief": "bg-rose-100 text-rose-800 border-rose-200",
-      Vitamins: "bg-orange-100 text-orange-800 border-orange-200",
+      "Vitamins": "bg-orange-100 text-orange-800 border-orange-200",
       "First Aid": "bg-teal-100 text-teal-800 border-teal-200",
-      Equipment: "bg-slate-100 text-slate-800 border-slate-200",
+      "Equipment": "bg-slate-100 text-slate-800 border-slate-200",
     }
-    return colors[category] || "bg-slate-100 text-slate-800 border-slate-200"
+    return  colors[category] || "bg-slate-100 text-slate-800 border-slate-200"
   }
 
   return (
@@ -95,7 +95,7 @@ export function InventoryList({ items, onStockAction }: InventoryListProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <p className="font-semibold text-slate-900">${item.price.toFixed(2)}</p>
+                      <p className="font-semibold text-slate-900">${parseFloat(item.price).toFixed(2)}</p>
                       <p className="text-xs text-slate-500">per {item.unit}</p>
                     </TableCell>
                     <TableCell>

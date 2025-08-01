@@ -1,16 +1,36 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Phone, Mail, MapPin, Star } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Phone, Mail, MapPin, Star, Plus } from "lucide-react"
+import { AddSupplierDialog } from "@/components/add-supplier-dialog"
 
 interface SuppliersTabProps {
   suppliers: any[]
+  onAddSupplier: (supplier: any) => void
 }
 
-export function SuppliersTab({ suppliers }: SuppliersTabProps) {
+export function SuppliersTab({ suppliers, onAddSupplier }: SuppliersTabProps) {
+  const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false)
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Suppliers</h2>
+          <p className="text-slate-600">Manage your supplier relationships</p>
+        </div>
+        <Button
+          onClick={() => setIsAddSupplierOpen(true)}
+          className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Supplier
+        </Button>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {suppliers.map((supplier) => (
         <Card
           key={supplier.id}
@@ -69,6 +89,13 @@ export function SuppliersTab({ suppliers }: SuppliersTabProps) {
           </CardContent>
         </Card>
       ))}
+      </div>
+
+      <AddSupplierDialog
+        open={isAddSupplierOpen}
+        onOpenChange={setIsAddSupplierOpen}
+        onAddSupplier={onAddSupplier}
+      />
     </div>
   )
 }

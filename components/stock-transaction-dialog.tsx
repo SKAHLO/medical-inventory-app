@@ -20,7 +20,7 @@ interface StockTransactionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item: any
-  onUpdateStock: (itemId: string, quantity: number, type: string, notes: string) => void
+  onUpdateStock: (itemId: number, quantity: number, type: string, notes: string) => void
 }
 
 export function StockTransactionDialog({ open, onOpenChange, item, onUpdateStock }: StockTransactionDialogProps) {
@@ -28,11 +28,11 @@ export function StockTransactionDialog({ open, onOpenChange, item, onUpdateStock
   const [quantity, setQuantity] = useState("")
   const [notes, setNotes] = useState("")
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!item || !quantity) return
 
-    onUpdateStock(item.id, Number.parseInt(quantity), transactionType, notes)
+    onUpdateStock(Number(item.id), Number.parseInt(quantity), transactionType, notes)
     setQuantity("")
     setNotes("")
     onOpenChange(false)
@@ -59,7 +59,7 @@ export function StockTransactionDialog({ open, onOpenChange, item, onUpdateStock
                 Current: {item.quantity} {item.unit}
               </p>
               <p className="text-sm text-slate-600">
-                Min: {item.minStock} {item.unit}
+                Min: {item.min_stock} {item.unit}
               </p>
             </div>
           </div>

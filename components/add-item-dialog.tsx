@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CategorySelector } from "@/components/category-selector"
 
 interface AddItemDialogProps {
   open: boolean
@@ -28,16 +29,15 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
     description: "",
     category: "",
     quantity: "",
-    minStock: "",
+    min_stock: "",
     price: "",
     unit: "",
     supplier: "",
     location: "",
-    batchNumber: "",
-    expiryDate: "",
+    batch_number: "",
+    expiry_date: "",
   })
 
-  const categories = ["Antibiotics", "Pain Relief", "Vitamins", "First Aid", "Equipment"]
   const units = ["pieces", "bottles", "boxes", "vials", "tablets", "ml", "mg", "g"]
 
   const handleSubmit = (e: { preventDefault: () => void }) => {
@@ -45,7 +45,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
     onAddItem({
       ...formData,
       quantity: Number.parseInt(formData.quantity),
-      minStock: Number.parseInt(formData.minStock),
+      min_stock: Number.parseInt(formData.min_stock),
       price: Number.parseFloat(formData.price),
     })
     setFormData({
@@ -53,13 +53,13 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
       description: "",
       category: "",
       quantity: "",
-      minStock: "",
+      min_stock: "",
       price: "",
       unit: "",
       supplier: "",
       location: "",
-      batchNumber: "",
-      expiryDate: "",
+      batch_number: "",
+      expiry_date: "",
     })
     onOpenChange(false)
   }
@@ -89,24 +89,13 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category" className="text-slate-700 font-medium">
-                Category *
-              </Label>
-              <Select
+              <Label htmlFor="category" className="text-slate-700 font-medium">Category</Label>
+              <CategorySelector
+                type="item"
                 value={formData.category}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-              >
-                <SelectTrigger className="border-slate-200 focus:border-emerald-500 focus:ring-emerald-500">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onValueChange={(value) => setFormData({...formData, category: value})}
+                placeholder="Select category"
+              />
             </div>
           </div>
 
@@ -140,14 +129,14 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minStock" className="text-slate-700 font-medium">
+              <Label htmlFor="min_stock" className="text-slate-700 font-medium">
                 Min Stock Level *
               </Label>
               <Input
-                id="minStock"
+                id="min_stock"
                 type="number"
-                value={formData.minStock}
-                onChange={(e) => setFormData((prev) => ({ ...prev, minStock: e.target.value }))}
+                value={formData.min_stock}
+                onChange={(e) => setFormData((prev) => ({ ...prev, min_stock: e.target.value }))}
                 placeholder="10"
                 required
                 className="border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
@@ -227,13 +216,13 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="batchNumber" className="text-slate-700 font-medium">
+              <Label htmlFor="batch_number" className="text-slate-700 font-medium">
                 Batch Number
               </Label>
               <Input
-                id="batchNumber"
-                value={formData.batchNumber}
-                onChange={(e) => setFormData((prev) => ({ ...prev, batchNumber: e.target.value }))}
+                id="batch_number"
+                value={formData.batch_number}
+                onChange={(e) => setFormData((prev) => ({ ...prev, batch_number: e.target.value }))}
                 placeholder="e.g., BT2024001"
                 className="border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
               />
@@ -241,14 +230,14 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, suppliers }: AddI
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expiryDate" className="text-slate-700 font-medium">
+            <Label htmlFor="expiry_date" className="text-slate-700 font-medium">
               Expiry Date
             </Label>
             <Input
-              id="expiryDate"
+              id="expiry_date"
               type="date"
-              value={formData.expiryDate}
-              onChange={(e) => setFormData((prev) => ({ ...prev, expiryDate: e.target.value }))}
+              value={formData.expiry_date}
+              onChange={(e) => setFormData((prev) => ({ ...prev, expiry_date: e.target.value }))}
               className="border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
             />
           </div>

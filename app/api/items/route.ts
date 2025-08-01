@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
@@ -13,10 +14,23 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { name, quantity, price, expiry_date } = await request.json();
+    const { 
+      name, 
+      description, 
+      category, 
+      quantity, 
+      min_stock, 
+      price, 
+      unit, 
+      supplier, 
+      location, 
+      batch_number, 
+      expiry_date 
+    } = await request.json();
+    
     await db.query(
-      'INSERT INTO items (name, quantity, price, expiry_date) VALUES (?, ?, ?, ?)',
-      [name, quantity, price, expiry_date]
+      'INSERT INTO items (name, description, category, quantity, min_stock, price, unit, supplier, location, batch_number, expiry_date, last_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+      [name, description, category, quantity, min_stock, price, unit, supplier, location, batch_number, expiry_date]
     );
     return NextResponse.json({ message: 'Item created' }, { status: 201 });
   } catch (error) {

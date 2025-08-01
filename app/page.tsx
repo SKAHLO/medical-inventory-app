@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -13,38 +14,62 @@ import { StockTransactionDialog } from "@/components/stock-transaction-dialog"
 import { SuppliersTab } from "@/components/suppliers-tab"
 
 export default function InventoryDashboard() {
-  const [items, setItems] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [fetchError, setFetchError] = useState("")
-  
+  const [items, setItems] = useState<any[]>([])
+  const [suppliers, setSuppliers] = useState<any[]>([])
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [fetchError, setFetchError] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [isAddItemOpen, setIsAddItemOpen] = useState<boolean>(false)
+  const [isStockTransactionOpen, setIsStockTransactionOpen] = useState<boolean>(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchAllData = async () => {
       try {
-        const res = await fetch("/api/items")
-        if (!res.ok) throw new Error("Failed to fetch items")
-        const data = await res.json()
-        setItems(data)
+        setIsLoading(true)
+        
+        // Fetch items
+        const itemsRes = await fetch("/api/items")
+        if (itemsRes.ok) {
+          const itemsData = await itemsRes.json()
+          setItems(itemsData)
+        } else {
+          console.error("Failed to fetch items")
+        }
+
+        // Fetch suppliers
+        const suppliersRes = await fetch("/api/suppliers")
+        if (suppliersRes.ok) {
+          const suppliersData = await suppliersRes.json()
+          setSuppliers(suppliersData)
+        } else {
+          console.error("Failed to fetch suppliers")
+        }
+
+        // Fetch transactions
+        const transactionsRes = await fetch("/api/transactions")
+        if (transactionsRes.ok) {
+          const transactionsData = await transactionsRes.json()
+          setTransactions(transactionsData)
+        } else {
+          console.error("Failed to fetch transactions")
+        }
+
       } catch (err) {
-        console.error("Error fetching items:", err)
-        setFetchError("Could not load inventory data.")
+        console.error("Error fetching data:", err)
+        setFetchError("Could not load data from database. Please check your database connection.")
       } finally {
         setIsLoading(false)
       }
     }
-    
-    fetchItems()
-  }, [])
 
-  const [suppliers, setSuppliers] = useState(mockSuppliers)
-  const [transactions, setTransactions] = useState(mockTransactions)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isAddItemOpen, setIsAddItemOpen] = useState(false)
-  const [isStockTransactionOpen, setIsStockTransactionOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState(null)
+    fetchAllData()
+  }, [])
 
   // Calculate dashboard metrics
   const totalItems = items.length
-  const lowStockItems = items.filter((item) => item.quantity <= item.minStock)
+  const lowStockItems = items.filter((item) => item.quantity <= item.min_stock)
   const totalValue = items.reduce((sum, item) => sum + item.quantity * item.price, 0)
   const totalSuppliers = suppliers.length
 
@@ -56,57 +81,136 @@ export default function InventoryDashboard() {
       item.supplier.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const handleAddItem = (newItem) => {
-    const item = {
-      ...newItem,
-      id: Date.now().toString(),
-      lastUpdated: new Date().toISOString(),
-    }
-    setItems((prev) => [...prev, item])
-  }
-
-  const handleUpdateStock = (itemId, quantity, type, notes) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const newQuantity = type === "in" ? item.quantity + quantity : Math.max(0, item.quantity - quantity)
-          return {
-            ...item,
-            quantity: newQuantity,
-            lastUpdated: new Date().toISOString(),
-          }
+  const handleAddItem = async (newItem: any) => {
+    try {
+      const response = await fetch('/api/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newItem),
+      })
+      
+      if (response.ok) {
+        // Refresh items list
+        const res = await fetch("/api/items")
+        if (res.ok) {
+          const data = await res.json()
+          setItems(data)
         }
-        return item
-      }),
-    )
-
-    // Add transaction record
-    const transaction = {
-      id: Date.now().toString(),
-      itemId,
-      itemName: items.find((i) => i.id === itemId)?.name || "",
-      quantity,
-      type,
-      notes,
-      date: new Date().toISOString(),
-      user: "Current User",
+      }
+    } catch (error) {
+      console.error('Error adding item:', error)
     }
-    setTransactions((prev) => [transaction, ...prev])
   }
 
-  const handleStockAction = (item, action) => {
+  const handleAddSupplier = async (newSupplier: any) => {
+    try {
+      const response = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSupplier),
+      })
+      
+      if (response.ok) {
+        // Refresh suppliers list
+        const res = await fetch("/api/suppliers")
+        if (res.ok) {
+          const data = await res.json()
+          setSuppliers(data)
+        }
+      }
+    } catch (error) {
+      console.error('Error adding supplier:', error)
+    }
+  }
+
+  const handleUpdateStock = async (itemId: number, quantity: number, type: string, notes: string) => {
+    try {
+      // Find the item to get its name
+      const item = items.find((i) => i.id === itemId)
+      if (!item) return
+
+      // Create transaction record
+      await fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          item_id: itemId,
+          item_name: item.name,
+          quantity,
+          type,
+          notes,
+          user: 'Current User'
+        }),
+      })
+
+      // Update item quantity
+      const newQuantity = type === "in" ? item.quantity + quantity : Math.max(0, item.quantity - quantity)
+      
+      await fetch(`/api/items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quantity: newQuantity
+        }),
+      })
+
+      // Refresh data
+      const [itemsRes, transactionsRes] = await Promise.all([
+        fetch("/api/items"),
+        fetch("/api/transactions")
+      ])
+
+      if (itemsRes.ok) {
+        const itemsData = await itemsRes.json()
+        setItems(itemsData)
+      }
+
+      if (transactionsRes.ok) {
+        const transactionsData = await transactionsRes.json()
+        setTransactions(transactionsData)
+      }
+
+    } catch (error) {
+      console.error('Error updating stock:', error)
+    }
+  }
+
+  const handleStockAction = (item: any, action: string) => {
     setSelectedItem(item)
     setIsStockTransactionOpen(true)
   }
 
-  return isLoading ? (
-  <div className="text-center py-12 text-slate-500">Loading inventory...</div>
-) : fetchError ? (
-  <Alert className="bg-red-50 border border-red-200 text-red-700 font-medium">
-    <AlertTriangle className="h-4 w-4 text-red-600" />
-    <AlertDescription>{fetchError}</AlertDescription>
-  </Alert>
-) :(
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="text-center py-12 text-slate-500">
+          <Package className="h-12 w-12 animate-spin mx-auto mb-4" />
+          Loading inventory data...
+        </div>
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-6">
+        <Alert className="bg-red-50 border border-red-200 text-red-700 font-medium max-w-md">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription>{fetchError}</AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="container mx-auto p-6 space-y-8">
         {/* Elegant Header */}
@@ -237,7 +341,7 @@ export default function InventoryDashboard() {
           </TabsContent>
 
           <TabsContent value="suppliers">
-            <SuppliersTab suppliers={suppliers} />
+            <SuppliersTab suppliers={suppliers} onAddSupplier={handleAddSupplier}/>
           </TabsContent>
 
           <TabsContent value="transactions">
@@ -248,37 +352,44 @@ export default function InventoryDashboard() {
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  {transactions.slice(0, 10).map((transaction, index) => (
-                    <div
-                      key={transaction.id}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${
-                        transaction.type === "in"
-                          ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200"
-                          : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            transaction.type === "in" ? "bg-emerald-500" : "bg-red-500"
-                          }`}
-                        />
-                        <div>
-                          <p className="font-semibold text-slate-900">{transaction.itemName}</p>
-                          <p className="text-sm text-slate-600">
-                            {transaction.type === "in" ? "Stock In" : "Stock Out"} • {transaction.user}
+                  {transactions.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      No transactions found
+                    </div>
+                  ) : (
+                    transactions.slice(0, 10).map((transaction, index) => (
+                      <div
+                        key={transaction.id || index}
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${
+                          transaction.type === "in"
+                            ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200"
+                            : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              transaction.type === "in" ? "bg-emerald-500" : "bg-red-500"
+                            }`}
+                          />
+                          <div>
+                            <p className="font-semibold text-slate-900">{transaction.item_name}</p>
+                            <p className="text-sm text-slate-600">
+                              {transaction.type === "in" ? "Stock In" : "Stock Out"} • {transaction.user}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-slate-900 text-lg">
+                            {transaction.type === "in" ? "+" : "-"}
+                            {transaction.quantity}
                           </p>
+                          <p className="text-sm text-slate-500">{new Date(transaction.date).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-slate-900 text-lg">
-                          {transaction.type === "in" ? "+" : "-"}
-                          {transaction.quantity}
-                        </p>
-                        <p className="text-sm text-slate-500">{new Date(transaction.date).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
