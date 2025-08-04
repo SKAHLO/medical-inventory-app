@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     await db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id]);
 
-    cookies().set('session_id', sessionId, {
+    (await cookies()).set('session_id', sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

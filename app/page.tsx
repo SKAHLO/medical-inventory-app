@@ -2,6 +2,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Plus, Search, AlertTriangle, Package, Users, DollarSign, LogOut, UserCog } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +29,7 @@ export default function InventoryDashboard() {
   const [isAddItemOpen, setIsAddItemOpen] = useState<boolean>(false)
   const [isStockTransactionOpen, setIsStockTransactionOpen] = useState<boolean>(false)
   const [selectedItem, setSelectedItem] = useState<any>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -285,6 +288,13 @@ export default function InventoryDashboard() {
               <Plus className="w-4 h-4 mr-2" />
               Add Item
             </Button>
+            {user?.level === 'admin' && (
+              <Link href="admin/create-user">
+                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                  Create New User
+                </button>
+              </Link>
+            )}
             <Button
               onClick={handleLogout}
               variant="outline"

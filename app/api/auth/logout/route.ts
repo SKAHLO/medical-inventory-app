@@ -5,13 +5,13 @@ import { cookies } from 'next/headers';
 
 export async function POST() {
   try {
-    const sessionId = cookies().get('session_id')?.value;
+    const sessionId = (await cookies()).get('session_id')?.value;
     
     if (sessionId) {
       await db.query('DELETE FROM sessions WHERE id = ?', [sessionId]);
     }
     
-    cookies().delete('session_id');
+    (await cookies()).delete('session_id');
     
     return NextResponse.json({ success: true });
     
